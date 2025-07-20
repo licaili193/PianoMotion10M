@@ -1,5 +1,5 @@
-./checkpoints
-/mano/*.pkl
-./logs
-./results
-.gitignore
+checkpoints
+mano/*.pkl
+logs
+results
+models/__pycache__

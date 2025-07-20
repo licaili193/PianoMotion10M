@@ -5,7 +5,6 @@ import math
 from transformers import Wav2Vec2Processor
 from models.wav2vec import Wav2Vec2Model, HubertModel
 from models.utils import init_biased_mask, enc_dec_mask, velocity_loss
-from mamba_ssm import Mamba
 
 def load_without_some_keys(model, pretrained_dict, dropout_key):
     model_dict = model.state_dict()
@@ -75,12 +74,16 @@ class Piano2Posi(nn.Module):
 
         elif self.encoder_type == 'mamba':
             print('!!! Use mamba in position predictor !!!')
-            self.mamba_encoder = Mamba(
-                                    d_model=self.feature_dim, # Model dimension d_model
-                                    d_state=args.num_layer,  # SSM state expansion factor
-                                    d_conv=4,    # Local convolution width
-                                    expand=2,    # Block expansion factor
-                                ).to("cuda")
+            try:
+                from mamba_ssm import Mamba
+                self.mamba_encoder = Mamba(
+                                        d_model=self.feature_dim, # Model dimension d_model
+                                        d_state=args.num_layer,  # SSM state expansion factor
+                                        d_conv=4,    # Local convolution width
+                                        expand=2,    # Block expansion factor
+                                    ).to("cuda")
+            except ImportError:
+                raise ImportError("mamba_ssm is required for mamba encoder type. Please install it or use transformer encoder type.")
 
         if args.latest_layer == "sigmoid": 
             self.bs_map_r = nn.Sequential(*[nn.Linear(self.feature_dim, 128),

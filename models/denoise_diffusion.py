@@ -12,7 +12,6 @@ from torch.cuda.amp import autocast
 from einops import rearrange, reduce
 
 from tqdm.auto import tqdm
-from mamba_ssm import Mamba
 
 from models.utils import init_biased_mask, enc_dec_mask
 # constants
@@ -361,12 +360,16 @@ class Unet1D(nn.Module):
             self.transformer_encoder = nn.TransformerEncoder(encoder_layer=encoder_layer, num_layers=num_layer)
         elif self.encoder_type == 'mamba':
             print('!!! Use mamba in denoising Unet !!!')
-            self.mamba_encoder = Mamba(
-                                    d_model=self.feature_dim, # Model dimension d_model
-                                    d_state=num_layer,  # SSM state expansion factor
-                                    d_conv=4,    # Local convolution width
-                                    expand=2,    # Block expansion factor
-                                ).to("cuda")
+            try:
+                from mamba_ssm import Mamba
+                self.mamba_encoder = Mamba(
+                                        d_model=self.feature_dim, # Model dimension d_model
+                                        d_state=num_layer,  # SSM state expansion factor
+                                        d_conv=4,    # Local convolution width
+                                        expand=2,    # Block expansion factor
+                                    ).to("cuda")
+            except ImportError:
+                raise ImportError("mamba_ssm is required for mamba encoder type. Please install it or use transformer encoder type.")
 
     def set_xcond(self, x_cond):
         if self.encoder_type == 'transformer':

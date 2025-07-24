@@ -3,3 +3,5 @@ mano/*.pkl
 logs
 results
 models/__pycache__
+datasets/dataset/
+datasets/__pycache__
